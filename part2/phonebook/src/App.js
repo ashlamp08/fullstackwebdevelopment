@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import Persons from "./components/Persons";
+import personsService from "./services/persons";
 
 const App = () => {
   const [persons, setPersons] = useState([]);
@@ -11,8 +11,8 @@ const App = () => {
   const [newFilter, setNewFilter] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:3001/persons").then((response) => {
-      setPersons(response.data);
+    personsService.getAll().then((person) => {
+      setPersons(person);
     });
   }, []);
 
@@ -28,6 +28,17 @@ const App = () => {
     setNewFilter(event.target.value);
   };
 
+  const handleDelete = (person) => {
+    return () => {
+      const confirmation = window.confirm(`Delete ${person.name}?`);
+      if (confirmation) {
+        personsService.deleteById(person.id).then((response) => {
+          setPersons(persons.filter((p) => p.id !== person.id));
+        });
+      }
+    };
+  };
+
   const personsToShow = persons.filter((person) =>
     person.name.toLowerCase().includes(newFilter.toLocaleLowerCase())
   );
@@ -37,11 +48,31 @@ const App = () => {
     if (newName === "" || newNumber === "") {
       alert("Cannot add empty name or number");
     } else if (persons.findIndex((person) => person.name === newName) === -1) {
-      setPersons(persons.concat({ name: newName, number: newNumber }));
+      const newPerson = { name: newName, number: newNumber };
+      personsService.create(newPerson).then((person) => {
+        setPersons(persons.concat(person));
+      });
       setNewName("");
       setNewNumber("");
     } else {
-      alert(`${newName} is already added to phonebook`);
+      const person = persons.find((person) => person.name === newName);
+      const personToUpdate = { ...person, number: newNumber };
+      const confirmation = window.confirm(
+        `${personToUpdate.name} is already added to phonebook, replace the old number with a new one?`
+      );
+      if (confirmation) {
+        personsService
+          .updateById(personToUpdate.id, personToUpdate)
+          .then((returnedPerson) => {
+            setPersons(
+              persons.map((p) =>
+                p.name === returnedPerson.name ? returnedPerson : p
+              )
+            );
+          });
+        setNewName("");
+        setNewNumber("");
+      }
     }
   };
 
@@ -58,7 +89,7 @@ const App = () => {
         number={newNumber}
       ></PersonForm>
       <h2>Numbers</h2>
-      <Persons persons={personsToShow}></Persons>
+      <Persons persons={personsToShow} handleDelete={handleDelete}></Persons>
     </div>
   );
 };
