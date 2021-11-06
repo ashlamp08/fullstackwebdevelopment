@@ -1,7 +1,22 @@
 const express = require("express");
+const morgan = require("morgan");
+
+morgan.token("tiny_post", (tokens, req, res) => {
+  return [
+    tokens.method(req, res),
+    tokens.url(req, res),
+    tokens.status(req, res),
+    tokens.res(req, res, "content-length"),
+    "-",
+    tokens["response-time"](req, res),
+    "ms",
+    req.method === "POST" ? JSON.stringify(req.body) : null,
+  ].join(" ");
+});
 
 const app = express();
 app.use(express.json());
+app.use(morgan("tiny_post"));
 const ID_RANGE = 5000;
 
 let persons = [
