@@ -1,2 +1,4 @@
 /playground
+/testsite
+**/node_modules/
 **/.DS_Store
