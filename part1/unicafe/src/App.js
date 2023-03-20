@@ -15,6 +15,7 @@ const Button = ({ handleClick, text }) => {
 const Statistics = ({ statistics }) => {
   return (
     <div>
+      <h1>Statistics</h1>
       <p>good {statistics.good}</p>
       <p>netural {statistics.neutral}</p>
       <p>bad {statistics.bad}</p>
